@@ -761,8 +761,8 @@ private:
 
 public:
   RGWGetPolicyV2Extractor(std::string access_key_id, std::string signature) {
-    access_key_id = std::move(access_key_id),
-    signature = std::move(signature);
+    this->access_key_id = std::move(access_key_id),
+    this->signature = std::move(signature);
   }
 
   void get_auth_keys(std::string& access_key_id,
