@@ -873,12 +873,12 @@ inline void decode(std::deque<T,Alloc>& ls, bufferlist::iterator& p)
   ::encode(struct_v, (bl));				     \
   ::encode(struct_compat, (bl));			     \
   buffer::list::iterator struct_compat_it = (bl).end();	     \
-  struct_compat_it.advance(-1);				     \
+  struct_compat_it.advance((ssize_t)-1);		     \
   ceph_le32 struct_len;				             \
   struct_len = 0;                                            \
   ::encode(struct_len, (bl));				     \
   buffer::list::iterator struct_len_it = (bl).end();	     \
-  struct_len_it.advance(-4);				     \
+  struct_len_it.advance((ssize_t)-4);			     \
   do {
 
 /**
@@ -948,7 +948,7 @@ inline void decode(std::deque<T,Alloc>& ls, bufferlist::iterator& p)
   } else if (skip_v) {							\
     if ((int)bl.get_remaining() < skip_v)				\
       throw buffer::malformed_input(DECODE_ERR_PAST(__PRETTY_FUNCTION__)); \
-    bl.advance(skip_v);							\
+    bl.advance(static_cast<ssize_t>(skip_v));				\
   }									\
   unsigned struct_end = 0;						\
   if (struct_v >= lenv) {						\
@@ -1011,7 +1011,7 @@ inline void decode(std::deque<T,Alloc>& ls, bufferlist::iterator& p)
     if (bl.get_off() > struct_end)					\
       throw buffer::malformed_input(DECODE_ERR_PAST(__PRETTY_FUNCTION__)); \
     if (bl.get_off() < struct_end)					\
-      bl.advance(struct_end - bl.get_off());				\
+      bl.advance(static_cast<ssize_t>(struct_end - bl.get_off()));	\
   }
 
 /*

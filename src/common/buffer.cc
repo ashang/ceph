@@ -1088,12 +1088,18 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   buffer::list::iterator_impl<is_const>::iterator_impl(bl_t *l, unsigned o)
     : bl(l), ls(&bl->_buffers), off(0), p(ls->begin()), p_off(0)
   {
-    advance(o);
+    advance(static_cast<ssize_t>(o));
   }
 
   template<bool is_const>
   buffer::list::iterator_impl<is_const>::iterator_impl(const buffer::list::iterator& i)
     : iterator_impl<is_const>(i.bl, i.off, i.p, i.p_off) {}
+
+  template<bool is_const>
+  void buffer::list::iterator_impl<is_const>::advance(int o)
+  {
+    advance(static_cast<ssize_t>(o));
+  }
 
   template<bool is_const>
   void buffer::list::iterator_impl<is_const>::advance(ssize_t o)
@@ -1135,11 +1141,16 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   }
 
   template<bool is_const>
+  void buffer::list::iterator_impl<is_const>::seek(unsigned o) {
+    seek(static_cast<size_t>(o));
+  }
+
+  template<bool is_const>
   void buffer::list::iterator_impl<is_const>::seek(size_t o)
   {
     p = ls->begin();
     off = p_off = 0;
-    advance(o);
+    advance(static_cast<ssize_t>(o));
   }
 
   template<bool is_const>
@@ -1156,7 +1167,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   {
     if (p == ls->end())
       throw end_of_buffer();
-    advance(1);
+    advance(static_cast<ssize_t>(1));
     return *this;
   }
 
@@ -1173,7 +1184,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   template<bool is_const>
   void buffer::list::iterator_impl<is_const>::copy(unsigned len, char *dest)
   {
-    if (p == ls->end()) seek(off);
+    if (p == ls->end()) seek(static_cast<size_t>(off));
     while (len > 0) {
       if (p == ls->end())
 	throw end_of_buffer();
@@ -1185,7 +1196,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       dest += howmuch;
 
       len -= howmuch;
-      advance(howmuch);
+      advance(static_cast<ssize_t>(howmuch));
     }
   }
 
@@ -1217,7 +1228,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       copy(len, dest.c_str());
     } else {
       dest = ptr(*p, p_off, len);
-      advance(len);
+      advance(static_cast<ssize_t>(len));
     }
   }
 
@@ -1225,7 +1236,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   void buffer::list::iterator_impl<is_const>::copy(unsigned len, list &dest)
   {
     if (p == ls->end())
-      seek(off);
+      seek(static_cast<size_t>(off));
     while (len > 0) {
       if (p == ls->end())
 	throw end_of_buffer();
@@ -1236,7 +1247,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       dest.append(*p, p_off, howmuch);
 
       len -= howmuch;
-      advance(howmuch);
+      advance(static_cast<ssize_t>(howmuch));
     }
   }
 
@@ -1244,7 +1255,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   void buffer::list::iterator_impl<is_const>::copy(unsigned len, std::string &dest)
   {
     if (p == ls->end())
-      seek(off);
+      seek(static_cast<size_t>(off));
     while (len > 0) {
       if (p == ls->end())
 	throw end_of_buffer();
@@ -1256,7 +1267,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       dest.append(c_str + p_off, howmuch);
 
       len -= howmuch;
-      advance(howmuch);
+      advance(static_cast<ssize_t>(howmuch));
     }
   }
 
@@ -1264,7 +1275,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   void buffer::list::iterator_impl<is_const>::copy_all(list &dest)
   {
     if (p == ls->end())
-      seek(off);
+      seek(static_cast<size_t>(off));
     while (1) {
       if (p == ls->end())
 	return;
@@ -1274,7 +1285,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       const char *c_str = p->c_str();
       dest.append(c_str + p_off, howmuch);
 
-      advance(howmuch);
+      advance(static_cast<ssize_t>(howmuch));
     }
   }
 
@@ -1283,7 +1294,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
     size_t want, const char **data)
   {
     if (p == ls->end()) {
-      seek(off);
+      seek(static_cast<size_t>(off));
       if (p == ls->end()) {
 	return 0;
       }
@@ -1327,9 +1338,19 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
     : iterator_impl(l, o, ip, po)
   {}
 
+  void buffer::list::iterator::advance(int o)
+  {
+    advance(static_cast<ssize_t>(o));
+  }
+
   void buffer::list::iterator::advance(ssize_t o)
   {
     buffer::list::iterator_impl<false>::advance(o);
+  }
+
+  void buffer::list::iterator::seek(unsigned o)
+  {
+    seek(static_cast<size_t>(o));
   }
 
   void buffer::list::iterator::seek(size_t o)
@@ -1399,7 +1420,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
   {
     // copy
     if (p == ls->end())
-      seek(off);
+      seek(static_cast<size_t>(off));
     while (len > 0) {
       if (p == ls->end())
 	throw end_of_buffer();
@@ -1411,14 +1432,14 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
 	
       src += howmuch;
       len -= howmuch;
-      advance(howmuch);
+      advance(static_cast<ssize_t>(howmuch));
     }
   }
   
   void buffer::list::iterator::copy_in(unsigned len, const list& otherl)
   {
     if (p == ls->end())
-      seek(off);
+      seek(static_cast<size_t>(off));
     unsigned left = len;
     for (std::list<ptr>::const_iterator i = otherl._buffers.begin();
 	 i != otherl._buffers.end();
@@ -1742,7 +1763,7 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
     if (off + len > length())
       throw end_of_buffer();
     if (last_p.get_off() != off) 
-      last_p.seek(off);
+      last_p.seek(static_cast<size_t>(off));
     last_p.copy(len, dest);
   }
 
@@ -1751,14 +1772,14 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
     if (off + len > length())
       throw end_of_buffer();
     if (last_p.get_off() != off) 
-      last_p.seek(off);
+      last_p.seek(static_cast<size_t>(off));
     last_p.copy(len, dest);
   }
 
   void buffer::list::copy(unsigned off, unsigned len, std::string& dest) const
   {
     if (last_p.get_off() != off) 
-      last_p.seek(off);
+      last_p.seek(static_cast<size_t>(off));
     return last_p.copy(len, dest);
   }
     
@@ -1773,14 +1794,14 @@ static simple_spinlock_t buffer_debug_lock = SIMPLE_SPINLOCK_INITIALIZER;
       throw end_of_buffer();
     
     if (last_p.get_off() != off) 
-      last_p.seek(off);
+      last_p.seek(static_cast<size_t>(off));
     last_p.copy_in(len, src, crc_reset);
   }
 
   void buffer::list::copy_in(unsigned off, unsigned len, const list& src)
   {
     if (last_p.get_off() != off) 
-      last_p.seek(off);
+      last_p.seek(static_cast<size_t>(off));
     last_p.copy_in(len, src);
   }
 

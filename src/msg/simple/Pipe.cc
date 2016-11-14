@@ -2106,14 +2106,14 @@ int Pipe::read_message(Message **pm, AuthSessionHandler* auth_handler)
 	  if (rxbuf.length() < data_len)
 	    rxbuf.push_back(buffer::create(data_len - rxbuf.length()));
 	  blp = p->second.first.begin();
-	  blp.advance(offset);
+	  blp.advance(static_cast<ssize_t>(offset));
 	}
       } else {
 	if (!newbuf.length()) {
 	  ldout(msgr->cct,20) << "reader allocating new rx buffer at offset " << offset << dendl;
 	  alloc_aligned_buffer(newbuf, data_len, data_off);
 	  blp = newbuf.begin();
-	  blp.advance(offset);
+	  blp.advance(static_cast<ssize_t>(offset));
 	}
       }
       bufferptr bp = blp.get_current_ptr();

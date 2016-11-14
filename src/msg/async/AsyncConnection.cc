@@ -636,7 +636,7 @@ void AsyncConnection::process()
               break;
             }
 
-            data_blp.advance(read);
+            data_blp.advance(static_cast<ssize_t>(read));
             data.append(bp, 0, read);
             msg_left -= read;
           }

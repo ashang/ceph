@@ -25,10 +25,6 @@
 #include <stdio.h>
 #include <sys/uio.h>
 
-#if defined(__linux__)	// For malloc(2).
-#include <malloc.h>
-#endif
-
 #include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
@@ -391,7 +387,11 @@ namespace buffer CEPH_BUFFER_API {
 	//return off == bl->length();
       }
 
+      // TODO: replace advance(int) and seek(unsigned) with advance(ssize_t)
+      //       and seek(size_t) when bumping the soversion
+      void advance(int o) __attribute__ ((deprecated));
       void advance(ssize_t o);
+      void seek(unsigned o) __attribute__ ((deprecated));
       void seek(size_t o);
       char operator*() const;
       iterator_impl& operator++();
@@ -429,13 +429,20 @@ namespace buffer CEPH_BUFFER_API {
   public:
     typedef iterator_impl<true> const_iterator;
 
+    // TODO: remove the iterator wrapper which is added for backward compatibility
+    //       when bumping the soversion
     class CEPH_BUFFER_API iterator : public iterator_impl<false> {
     public:
       iterator() = default;
       iterator(bl_t *l, unsigned o=0);
       iterator(bl_t *l, unsigned o, list_iter_t ip, unsigned po);
 
+      // TODO: replace advance(int) and seek(unsigned) with advance(ssize_t)
+      //       and seek(size_t) when bumping the soversion, then remove the
+      //       static_cast<> in buffer.cc
+      void advance(int o) __attribute__ ((deprecated));
       void advance(ssize_t o);
+      void seek(unsigned o) __attribute__ ((deprecated));
       void seek(size_t o);
       char operator*();
       iterator& operator++();
